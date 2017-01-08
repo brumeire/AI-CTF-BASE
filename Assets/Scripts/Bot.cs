@@ -21,7 +21,6 @@ public class Bot : MonoBehaviour {
   public bool is_dead = false;
 
 
-  // A REMPLIR :
   // CONTRAINTES : 
   // La distance de vision d'un bot est infinie.
   // Il ne voit pas un objet s'il y a un mur entre lui et cet objet
@@ -31,7 +30,16 @@ public class Bot : MonoBehaviour {
     Vector3 dir_to_obj = obj.transform.position - transform.position;
     Ray r = new Ray(transform.position, dir_to_obj);
     RaycastHit hit;
-    if(Physics.Raycast(r, out hit))
+    // si on ne cherche pas spécifiquement un drapeau, on ignore celui-ci dans le raycast
+    int layer_mask = Physics.DefaultRaycastLayers;
+    if(obj.tag != "Flag")
+    {
+      layer_mask = 1 << LayerMask.NameToLayer("Flag");
+      layer_mask |= Physics.IgnoreRaycastLayer;
+      layer_mask = ~layer_mask;
+    }
+
+    if(Physics.Raycast(r, out hit, Mathf.Infinity, layer_mask))
     {
       if(hit.collider.gameObject == obj)
       {

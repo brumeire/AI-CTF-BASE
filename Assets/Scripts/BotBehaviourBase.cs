@@ -41,6 +41,12 @@ public class BotBehaviourBase : MonoBehaviour {
     SwitchState(BotState.IDLE);
 	}
 
+  void SeenEnemyFlag()
+  {
+    
+  }
+
+
   void Update()
   {
     UpdateState();
@@ -88,6 +94,25 @@ public class BotBehaviourBase : MonoBehaviour {
           bot.ShootInDirection(dir);
         }
       }
+
+
+      // debug pour afficher si on voit notre drapeau et éventuellement son porteur
+      bool sees_flag = bot.CanSeeObject(team.team_flag.gameObject);
+      bool sees_carrier = false;
+      int carrier_ID = master.GetFlagCarrierID(team.team_ID);
+      if(carrier_ID != -1 && bot.CanSeeObject(master.GetBotFromID(carrier_ID)))
+      {
+        sees_carrier = true;
+      }
+
+      GizmosService.Text("flag ? " + sees_flag, transform.position - Vector3.right * 4);
+      GizmosService.Text("carrier ? " + sees_carrier, transform.position - Vector3.right * 8);
+
+      GizmosService.Cone( transform.position, 
+                          transform.forward, 
+                          transform.up, 
+                          100, 
+                          70);
 
       break;
     }

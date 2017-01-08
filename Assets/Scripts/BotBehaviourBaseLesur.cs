@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class BotBehaviourBaseExample : MonoBehaviour {
+public class BotBehaviourBaseLesur : MonoBehaviour {
 
 
   // liste des states possibles pour ce comportement de bot
@@ -38,8 +38,6 @@ public class BotBehaviourBaseExample : MonoBehaviour {
     agent = bot_object.GetComponent<UnityEngine.AI.NavMeshAgent>();
     collider = bot_object.GetComponent<Collider>();
     renderer = bot_object.GetComponent<Renderer>();
-
-    SwitchState(BotState.IDLE);
 	}
 
   void Update()
@@ -48,7 +46,7 @@ public class BotBehaviourBaseExample : MonoBehaviour {
   }
 
 
-  void SwitchState(BotState new_state)
+  public void SwitchState(BotState new_state)
   {
     OnExitState();
     state = new_state;
@@ -63,7 +61,7 @@ public class BotBehaviourBaseExample : MonoBehaviour {
       break;
 
       case BotState.FIND_ENEMY_FLAG:
-
+      agent.SetDestination(team.enemy_base.position);
       break;
     }
   }
@@ -74,13 +72,7 @@ public class BotBehaviourBaseExample : MonoBehaviour {
     {
       case BotState.IDLE:
 
-      // go to other team camp
-      agent.SetDestination(team.enemy_base.position);
-      int carrier_ID = master.GetFlagCarrierID(team.team_ID);
-      if(carrier_ID != -1)
-      {
-        // il y a un carrier
-      }
+      
 
       break;
     }

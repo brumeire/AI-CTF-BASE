@@ -236,7 +236,8 @@ public class GizmosService : MonoBehaviour
       bool color_swapped = false;
       Color prev_color = Gizmos.color;
       if( info.ContainsKey("color") && 
-          action != GizmoAction.COLOR)
+          action != GizmoAction.COLOR &&
+          info["color"] != null)
       {
         color_swapped = true;
         Color new_color = (Color)info["color"];

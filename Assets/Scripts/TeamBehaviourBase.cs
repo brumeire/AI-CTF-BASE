@@ -1,18 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class TeamBehaviourBase : MonoBehaviour
-{
+public class TeamBehaviourBase : MonoBehaviour {
 
-	Team team;
+  Team team;
 
-	void Start ()
-	{
-		team = transform.parent.GetComponent<Team> ();
+	void Start () 
+  {
+    team = transform.parent.GetComponent<Team>();
 	}
-
-	void Update ()
-	{
+	
+	void Update () 
+  {
 	
 	}
 }
