@@ -7,6 +7,8 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 	Team team;
 
+	int teamID;
+
 	public enum TeamStrategy{ 
 		Defense, 
 		AttackFlag, 
@@ -15,17 +17,25 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 	};
 
 
-	public TeamStrategy teamStrategy = TeamStrategy.AttackFlag;
+	public TeamStrategy teamStrategy = TeamStrategy.Defense;
 
 
 	public List<BotBehaviourDeusVult> teamMates = new List<BotBehaviourDeusVult> ();
 
 
+	public List<GameObject> ennemies = new List<GameObject> ();
+
+
+
 	public GameObject flagDefenser;
+
+	public GameObject sideCamper;
 
 
 
 	public bool weStoleTheirFlag = false;
+
+	public bool theyStoleOurFlag = false;
 
 
 	public bool weSeeOurFlag = false;
@@ -46,14 +56,41 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 	public int numberOfAttacking = 0;
 
 
+	GameMaster master;
+
+	int pointsTeam = 0;
+	int pointsEnnemy = 0;
+
+
+	public BotBehaviourDeusVult flagCarrier;
+
 
 	void Start ()
 	{
+
+		master = FindObjectOfType<GameMaster>();
 		team = transform.parent.GetComponent<Team> ();
+
+		teamID = team.team_ID;
+
+
+
+
+
 
 		ourFlagLastKnownPosition = team.team_base.position;
 		theirFlagLastKnownPosition = team.enemy_base.position;
 
+
+
+
+		foreach (GameObject go in GameObject.FindGameObjectsWithTag("Bot")) {
+		
+			if (go.GetComponent<Bot> ().team_ID != teamID)
+				ennemies.Add (go);
+
+		
+		}
 
 
 
@@ -68,20 +105,125 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 		
 			if (!flagDefenser) {
 			
-				GetNewFlagDefenser ();			
+				flagDefenser = GetCloser (team.team_base.position);
+
+				flagDefenser.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefenseProtectBase);
 			
 			
 			}
+
 		
 		
 		
 		}
 
 
+
+		// STRATEGIE DEFENSE
+
+		else if (teamStrategy == TeamStrategy.Defense) {
+
+			if (!flagDefenser) {
+
+				flagDefenser = GetCloser (team.team_base.position);
+
+				flagDefenser.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefenseProtectBase);
+
+
+			}
+
+
+			if (!sideCamper) {
+			
+				Vector3 posCamping = new Vector3 ();
+				sideCamper = GetCloser (posCamping);
+
+				sideCamper.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefensePlantATent);
+
+
+			}
+
+
+
+		}
+
+
+
+
+
+		//MAJ Variables
+
+		int flagCarrier = master.GetFlagCarrierID ((teamID + 1) % 2);
+		if (flagCarrier > -1) { // On a récupéré le drapeau
+
+
+			weStoleTheirFlag = true;
+
+		} 
+
+		else {
+		
+		
+			weStoleTheirFlag = false;
+		
+		
+		}
+
+
+
+
+
+		if (master.is_flag_home [teamID]) {
+		
+
+			theyStoleOurFlag = false;
+		
+		
+		}
+
+
+
+
+		else {
+
+
+			theyStoleOurFlag = true;
+
+
+		}
+
+
+
+
+		if (master.GetScore (teamID) > pointsTeam) {
+		
+			BroughtBackTheirFlag ();
+			pointsTeam++;
+		
+		
+		}
+
+		if (master.GetScore ((teamID + 1) % 2) > pointsEnnemy) {
+		
+			BroughtBackOurFlag ();
+			pointsEnnemy++;
+		
+		
+		}
+
+
+		if (master.GetFlagCarrierID((teamID + 1) % 2) == -1)
+			BroughtBackOurFlag ();
+
+		if (master.GetFlagCarrierID(teamID) == -1)
+			BroughtBackTheirFlag ();
+
+
+
 	}
 
 
-	public void GetNewFlagDefenser(){
+	/*public void GetNewFlagDefenser(){
 	
 	
 		float distance = float.MaxValue;
@@ -93,7 +235,7 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 			float newDist = Vector3.Distance (bot.transform.position, team.team_flag.transform.position);
 
-			if ( newDist < distance) {
+			if (newDist < distance) {
 			
 				distance = newDist;
 				closer = bot;
@@ -111,6 +253,35 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 	
 	
+	}*/
+
+	public GameObject GetCloser(Vector3 pos){
+
+
+		float distance = float.MaxValue;
+		BotBehaviourDeusVult closer = teamMates[0];
+
+
+		foreach (BotBehaviourDeusVult bot in teamMates) {
+
+			if (bot.state != BotBehaviourDeusVult.BotState.DefenseProtectBase) {
+
+				float newDist = Vector3.Distance (bot.transform.position, pos);
+
+				if (newDist < distance) {
+
+					distance = newDist;
+					closer = bot;
+
+				}
+			
+			}
+
+		}
+
+			return closer.gameObject;
+
+
 	}
 
 

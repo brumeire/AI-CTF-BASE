@@ -13,6 +13,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		AttackBringFlagBack, 
 		AttackShootFlagFollowers, 
 		DefenseProtectBase, 
+		DefensePlantATent, 
 		DefenseShootFragBearer, 
 		DefenseBlockEnnemiesSolo, 
 		DefenseBlockEnnemiesTeam
@@ -28,11 +29,14 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 	GameMaster master;
 	Team team;
 
+	int teamId;
+
+
 
 	// go qui possède les components du bot
 	GameObject bot_object;
 	// script de base contenant ID, team_ID du bot
-	Bot bot;
+	public Bot bot;
 	// components du game object de base du bot
 	UnityEngine.AI.NavMeshAgent agent;
 	Collider collider;
@@ -52,7 +56,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		agent = bot_object.GetComponent<UnityEngine.AI.NavMeshAgent>();
 		collider = bot_object.GetComponent<Collider>();
 		renderer = bot_object.GetComponent<Renderer>();
-
+		teamId = bot.team_ID;
 
 		teamController = transform.parent.parent.GetComponentInChildren<TeamBehaviourDeusVult> ();
 
@@ -60,6 +64,8 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 
 
 		SwitchState(BotState.IDLE);
+
+		teamController.flagCarrier = this;
 	}
 
 	void Update()
@@ -74,19 +80,34 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		if (teamController.teamStrategy == TeamBehaviourDeusVult.TeamStrategy.AttackFlag) {
 		
 
-			if (state != BotState.DefenseProtectBase && !teamController.weStoleTheirFlag) {
+			if (state != BotState.DefenseProtectBase) {
 			
-				SwitchState (BotState.AttackGetFlag);
-			
-			}
 
-			int flagCarrier = master.GetFlagCarrierID (team.team_ID);
-			if (flagCarrier > -1) { // On a récupéré le drapeau
-			
-			
-			
-			
-			
+
+				if (!teamController.weStoleTheirFlag)
+					SwitchState (BotState.AttackGetFlag);
+
+
+
+
+				else if (teamController.weStoleTheirFlag) {
+
+
+					if (master.GetFlagCarrierID ((teamId + 1) % 2) == bot.ID) {
+
+						teamController.flagCarrier = this;
+
+						SwitchState (BotState.AttackBringFlagBack);
+
+					}
+
+					else
+						SwitchState (BotState.AttackHelpFlagGetter);
+
+					Debug.Log (master.GetFlagCarrierID ((teamId + 1) % 2) + ", " + bot.ID +", " + teamId);
+
+				}
+					
 			
 			}
 
@@ -99,6 +120,60 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		}
 
 
+
+
+
+		else if (teamController.teamStrategy == TeamBehaviourDeusVult.TeamStrategy.Defense) {
+
+
+			if (state != BotState.DefenseProtectBase) {
+
+
+
+				if (!teamController.weStoleTheirFlag)
+					SwitchState (BotState.AttackGetFlag);
+
+
+
+
+				else if (teamController.weStoleTheirFlag) {
+
+
+					if (master.GetFlagCarrierID ((teamId + 1) % 2) == bot.ID) {
+
+						teamController.flagCarrier = this;
+
+						SwitchState (BotState.AttackBringFlagBack);
+
+					}
+
+					else
+						SwitchState (BotState.AttackHelpFlagGetter);
+
+					Debug.Log (master.GetFlagCarrierID ((teamId + 1) % 2) + ", " + bot.ID +", " + teamId);
+
+				}
+
+
+			}
+
+
+
+
+			GetComponent<DeusVultStrategyDefense> ().Act ();
+
+
+		}
+
+
+
+
+
+
+
+
+
+		GizmosService.Cone(bot_object.transform.position, bot_object.transform.forward, Vector3.up, 10, 70);
 
 	}
 
@@ -120,15 +195,30 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 
 			}
 
-		} else if (!teamController.theOnesWhoSeeOurFlag.Contains (this)) { // Je ne vois pas le drapeau
+		} else {
+
+			if (teamController.theOnesWhoSeeOurFlag.Contains (this)) { // Je ne vois pas le drapeau
 
 
-			teamController.theOnesWhoSeeOurFlag.Remove (this); // Et la team pense que je le vois
+				teamController.theOnesWhoSeeOurFlag.Remove (this); // Et la team pense que je le vois
 
+			}
+
+
+
+
+
+
+
+			if (!IsFlagAtPos (teamController.ourFlagLastKnownPosition, teamId) && master.GetFlagCarrierID ((teamId + 1) % 2) == -1 && teamController.theOnesWhoSeeOurFlag.Count == 0)
+				teamController.BroughtBackOurFlag ();
+			
+			else if (!IsFlagAtPos (teamController.ourFlagLastKnownPosition, teamId) && master.GetFlagCarrierID ((teamId + 1) % 2) > -1 && teamController.theOnesWhoSeeOurFlag.Count == 0)
+				teamController.ourFlagLastKnownPosition = team.enemy_base.position;
+
+	
+	
 		}
-	
-	
-
 
 
 
@@ -146,14 +236,30 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 
 			}
 
-		} else if (!teamController.theOnesWhoSeeTheirFlag.Contains (this)) { // Je ne vois pas le drapeau
+		} else {
 
 
-			teamController.theOnesWhoSeeTheirFlag.Remove (this); // Et la team pense que je le vois
+			if (teamController.theOnesWhoSeeTheirFlag.Contains (this)) { // Je ne vois pas le drapeau
+
+
+				teamController.theOnesWhoSeeTheirFlag.Remove (this); // Et la team pense que je le vois
+
+			}
+
+
+
+
+
+
+
+
+
+			if (!IsFlagAtPos (teamController.theirFlagLastKnownPosition, (teamId + 1) % 2) && teamController.theOnesWhoSeeTheirFlag.Count == 0)
+				teamController.BroughtBackTheirFlag ();
+
+
 
 		}
-
-
 
 
 		if (teamController.theOnesWhoSeeOurFlag.Count <= 0)
@@ -186,6 +292,14 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 			break;
 
 		case BotState.AttackGetFlag:
+			teamController.numberOfAttacking++;
+			break;
+
+		case BotState.AttackBringFlagBack:
+			teamController.numberOfAttacking++;
+			break;
+
+		case BotState.AttackHelpFlagGetter:
 			teamController.numberOfAttacking++;
 			break;
 		}
@@ -235,6 +349,38 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		case BotState.AttackGetFlag:
 			teamController.numberOfAttacking--;
 			break;
+
+		case BotState.AttackBringFlagBack:
+			teamController.numberOfAttacking--;
+			break;
+
+		case BotState.AttackHelpFlagGetter:
+			teamController.numberOfAttacking--;
+			break;
 		}
 	}
+
+
+	bool IsFlagAtPos(Vector3 pos, int teamID)
+	{
+		Vector3 dir_to_obj = pos - transform.position;
+		Ray r = new Ray(transform.position, dir_to_obj);
+		RaycastHit hit;
+		// si on ne cherche pas spécifiquement un drapeau, on ignore celui-ci dans le raycast
+		int layer_mask = Physics.DefaultRaycastLayers;
+
+		if(Physics.Raycast(r, out hit, Mathf.Infinity, layer_mask))
+		{
+			if(hit.collider.tag == "Flag" && hit.collider.name == "flag_" + teamId.ToString())
+			{
+				if(Vector3.Angle(transform.forward, dir_to_obj) <= 70)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
 }

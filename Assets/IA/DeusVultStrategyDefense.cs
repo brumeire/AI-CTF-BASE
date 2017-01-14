@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class DeusVultStrategyAttackFlag : MonoBehaviour {
+public class DeusVultStrategyDefense : MonoBehaviour {
 
 
 	// Game master (script qui gère la capture des drapeaux, le respawn des bots et le score)
@@ -35,7 +35,7 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 
 
 	void Start(){
-	
+
 		master = FindObjectOfType<GameMaster>();
 		team = transform.parent.parent.GetComponent<Team>();
 
@@ -51,17 +51,17 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 		teamController = transform.parent.parent.GetComponentInChildren<TeamBehaviourDeusVult> ();
 
 
-	
+
 	}
 
 
 	public void Act (){
-	
+
 
 		agent.Resume ();
 
 		if (behaviour.state == BotBehaviourDeusVult.BotState.IDLE) { 
-		
+
 			if (Input.GetMouseButtonDown (0)) {
 				Ray r = Camera.main.ScreenPointToRay (Input.mousePosition);
 				RaycastHit hit;
@@ -78,10 +78,10 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 					bot.ShootInDirection (dir);
 				}
 			}
-		
-		
-		
-		
+
+
+
+
 		} 
 
 
@@ -90,7 +90,7 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 
 
 		else if (behaviour.state == BotBehaviourDeusVult.BotState.DefenseProtectBase) {
-		
+
 			Vector3 target = Vector3.zero;
 
 			if (team.team_ID == 1)
@@ -116,9 +116,9 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 
 				bot_object.transform.Rotate (Vector3.up, Mathf.Clamp (360 * Time.deltaTime, 0, angle));
 			}
-		
 
-		
+
+
 		}
 
 
@@ -127,11 +127,11 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 
 
 		else if (behaviour.state == BotBehaviourDeusVult.BotState.AttackGetFlag) {
-		
-		
+
+
 			agent.SetDestination (teamController.theirFlagLastKnownPosition);
-		
-		
+
+
 		}
 
 
@@ -141,10 +141,10 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 
 
 		else if (behaviour.state == BotBehaviourDeusVult.BotState.AttackHelpFlagGetter) {
-		
-					
+
+
 			if (!teamController.theyStoleOurFlag) {
-			
+
 				if (Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) > 15 && Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) < 30) {
 
 
@@ -158,44 +158,44 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 					agent.SetDestination (teamController.flagCarrier.transform.position);
 
 				}
-					else 
-						agent.SetDestination (team.team_base.position);
-				
-			
-			
-			
+				else 
+					agent.SetDestination (team.team_base.position);
+
+
+
+
 			} else {
-			
-			
+
+
 				agent.SetDestination (teamController.ourFlagLastKnownPosition);
-			
-			
+
+
 			}
-		
-		
+
+
 		} 
 
 
 
 
 		else if (behaviour.state == BotBehaviourDeusVult.BotState.AttackBringFlagBack) {
-		
-		
+
+
 			Vector3 helpersGlobalPos = Vector3.zero;
 			int count = 0;
 
 			foreach (BotBehaviourDeusVult ally in teamController.teamMates) {
-			
+
 				if (ally.state == BotBehaviourDeusVult.BotState.AttackHelpFlagGetter) {
 
 					if (!ally.bot.is_dead) {
-						
+
 						helpersGlobalPos += ally.transform.position;
 						count++;
 
 					}
 				}
-			
+
 			}
 
 			if (count > 0)
@@ -207,7 +207,7 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 				if (Vector3.Distance (transform.position, team.team_base.position) > 20){
 
 					if (count > 0)
-					//agent.SetDestination (helpersGlobalPos - 7 * (helpersGlobalPos - transform.position).normalized);
+						//agent.SetDestination (helpersGlobalPos - 7 * (helpersGlobalPos - transform.position).normalized);
 						agent.SetDestination (helpersGlobalPos);
 					else
 						agent.SetDestination (team.team_base.position);
@@ -216,15 +216,15 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 				}
 				else
 					agent.SetDestination (team.team_base.position);
-		
-		
+
+
 
 
 			} else
 				agent.SetDestination (team.team_base.position);
-		
+
 		}
-	
+
 
 
 
@@ -268,14 +268,14 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 		// TESTING
 
 		if (bot.can_shoot) {
-			
+
 			List<GameObject> targets = new List<GameObject> ();
 			bool seeCarrier = false;
 
 			foreach (GameObject ennemy in teamController.ennemies) {
 
 				if (bot.CanSeeObject (ennemy)) {
-					
+
 					targets.Add (ennemy);
 
 					if (teamController.theyStoleOurFlag && ennemy.GetComponent<Bot> ().ID == master.GetFlagCarrierID (team.team_ID))
@@ -298,23 +298,23 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 		}
 
 
-	
+
 	}
 
 
 
 	IEnumerator Shoot(GameObject target){
-	
+
 		Vector3 targetPos = target.transform.position;
 
 		yield return null;
 
 		if (bot.CanSeeObject (target) && bot.can_shoot) {
-		
+
 			Vector3 newTargetPos = target.transform.position;
 
 			Vector3 targetDir = (newTargetPos - targetPos).normalized;
-		
+
 
 			Vector3 aimedPos = newTargetPos;
 
@@ -338,12 +338,12 @@ public class DeusVultStrategyAttackFlag : MonoBehaviour {
 
 				bot.ShootInDirection (shootDir);
 			}
-		
+
 		}
-	
+
 		shooter = null;
-	
-	
+
+
 	}
-		
+
 }
