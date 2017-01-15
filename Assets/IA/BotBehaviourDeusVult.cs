@@ -66,6 +66,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		SwitchState(BotState.IDLE);
 
 		teamController.flagCarrier = this;
+
 	}
 
 	void Update()
@@ -300,7 +301,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 
 
 
-			if (!IsFlagAtPos (teamController.ourFlagLastKnownPosition, teamId) && master.GetFlagCarrierID ((teamId + 1) % 2) == -1 && teamController.theOnesWhoSeeOurFlag.Count == 0)
+			if (!IsFlagAtPos (teamController.ourFlagLastKnownPosition, teamId) && master.GetFlagCarrierID ((teamId + 1) % 2) == -1 && teamController.theOnesWhoSeeOurFlag.Count == 0 && master.IsTeamFlagHome(teamId))
 				teamController.BroughtBackOurFlag ();
 			
 			else if (!IsFlagAtPos (teamController.ourFlagLastKnownPosition, teamId) && master.GetFlagCarrierID ((teamId + 1) % 2) > -1 && teamController.theOnesWhoSeeOurFlag.Count == 0)
@@ -344,7 +345,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 
 
 
-			if (!IsFlagAtPos (teamController.theirFlagLastKnownPosition, (teamId + 1) % 2) && teamController.theOnesWhoSeeTheirFlag.Count == 0)
+			if (!IsFlagAtPos (teamController.theirFlagLastKnownPosition, (teamId + 1) % 2) && teamController.theOnesWhoSeeTheirFlag.Count == 0 && master.IsTeamFlagHome((teamId + 1) % 2))
 				teamController.BroughtBackTheirFlag ();
 
 
@@ -467,7 +468,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		// si on ne cherche pas spécifiquement un drapeau, on ignore celui-ci dans le raycast
 		int layer_mask = Physics.DefaultRaycastLayers;
 
-		if(Physics.Raycast(r, out hit, Vector3.Distance(pos, transform.position), layer_mask) || Vector3.Angle(transform.forward, dir_to_obj) > 70)
+		if(Physics.Raycast(r, out hit, Vector3.Distance(pos, transform.position), layer_mask, QueryTriggerInteraction.Ignore) || Vector3.Angle(transform.forward, dir_to_obj) > 70)
 		{
 			
 			return true; // on a la vision et le drapeau est là ou on ne peut pas voir le drapeau

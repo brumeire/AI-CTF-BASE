@@ -69,6 +69,7 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 	public Vector3 posCamping1;
 
+
 	void Start ()
 	{
 
@@ -103,7 +104,6 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 		
 		}
-
 
 
 	}

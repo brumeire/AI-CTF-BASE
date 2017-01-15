@@ -19,9 +19,9 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4000012711555248}
-  - component: {fileID: 114565622646319304}
+  - component: {fileID: 114000013896937632}
   m_Layer: 0
-  m_Name: team_controller_Deus_Vult
+  m_Name: team_controller_rally
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -40,7 +40,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114565622646319304
+--- !u!114 &114000013896937632
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -48,24 +48,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1000014130282326}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daab1e333f3ce0144baa265bb178d98e, type: 3}
+  m_Script: {fileID: 11500000, guid: 08ab1a45587e05f41af4cd6c83adce3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  teamStrategy: 1
-  teamMates: []
-  ennemies: []
-  flagDefenser: {fileID: 0}
-  sideCamper: {fileID: 0}
-  weStoleTheirFlag: 0
-  theyStoleOurFlag: 0
-  weSeeOurFlag: 0
-  ourFlagLastKnownPosition: {x: 0, y: 0, z: 0}
-  theOnesWhoSeeOurFlag: []
-  weSeeTheirFlag: 0
-  theirFlagLastKnownPosition: {x: 0, y: 0, z: 0}
-  theOnesWhoSeeTheirFlag: []
-  numberOfProtecting: 0
-  numberOfAttacking: 0
-  flagCarrier: {fileID: 0}
-  posCamping0: {x: 0, y: 0, z: 0}
-  posCamping1: {x: 0, y: 0, z: 0}

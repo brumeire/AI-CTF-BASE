@@ -208,8 +208,11 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 					agent.SetDestination (posWait);
 
-					if (Vector3.Distance (posWait, teamController.ourFlagLastKnownPosition) < 10)
+					if (Vector3.Distance (posWait, teamController.ourFlagLastKnownPosition) <= 15)
 						agent.SetDestination (teamController.ourFlagLastKnownPosition);
+
+					else if (Vector3.Distance (posWait, teamController.theirFlagLastKnownPosition) <= 15)
+						agent.SetDestination (teamController.theirFlagLastKnownPosition);
 
 
 					else if (Vector3.Distance (transform.position, posWait) < 4) {
@@ -456,33 +459,35 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 		Vector3 targetPos = target.transform.position;
 
-		if (Vector3.Distance (targetPos, transform.position) < 13) {
+		/*if (Vector3.Distance (targetPos, transform.position) <= 10) {
 		
 			Vector3 shootDir = targetPos - transform.position;
 			GizmosService.Line (transform.position, targetPos, 2);
 		
 
-			Ray ray = new Ray (transform.position, shootDir);
+			/*Ray ray = new Ray (transform.position, shootDir);
 
 			int layerMask = ~LayerMask.GetMask(new string[]{ "TeamRed", "TeamBlue", "Rocket", "Flag" });
 			/*if (team.team_ID == 0)
 				layerMask = ~(1 << 9);
 			else
-				layerMask = ~(1 << 8);*/
+				layerMask = ~(1 << 8);*//*
 
-			if (!Physics.SphereCast(ray, 0.7f, Vector3.Distance(transform.position, targetPos), layerMask)) {
+			if (!Physics.SphereCast(ray, 0.7f, Vector3.Distance(transform.position, targetPos), layerMask)) {*//*
 
 
 				if (Vector3.Angle(transform.forward, shootDir) <= 70)
 					bot.ShootInDirection (shootDir);
 
 
-			}
+			//}
 		
 
-		}
-
+		}*/
+		float timeBetweenShots = 0;
 		yield return null;
+		timeBetweenShots += Time.deltaTime;
+
 
 		if (bot.CanSeeObject (target) && bot.can_shoot) {
 
@@ -496,11 +501,11 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 			Vector3 shootDir = aimedPos - transform.position;
 
-			if (newTargetPos != targetPos && (newTargetPos - targetPos).magnitude > 0.003f && Vector3.Distance (transform.position, newTargetPos) > 8)
+			if (newTargetPos != targetPos && (newTargetPos - targetPos).magnitude > 0.004f && Vector3.Angle(transform.forward, targetDir) % 180 > 5/*Vector3.Distance (transform.position, newTargetPos) > 8*/)
 				//aimedPos = newTargetPos + targetDir * Time.deltaTime * 26 * Vector3.Distance(transform.position, newTargetPos + targetDir * Time.deltaTime * 5);
 				//aimedPos = newTargetPos + targetDir * Time.deltaTime * 30f * Vector3.Distance(transform.position, newTargetPos /*+ targetDir * Time.deltaTime * 1.2f*/) * 0.95f;
 
-				shootDir += Vector3.Distance (aimedPos, transform.position) * targetDir * Vector3.Distance (newTargetPos, targetPos) / Time.deltaTime /* * 0.048*/ / 22;
+				shootDir += Vector3.Distance (aimedPos, transform.position) * targetDir * Vector3.Distance (newTargetPos, targetPos) / timeBetweenShots /*Time.deltaTime /* * 0.048*/ / 22;
 				//shootDir = aimedPos - transform.position;
 
 
@@ -510,20 +515,24 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 			Ray ray = new Ray (transform.position, shootDir);
 
-			int layerMask = ~LayerMask.GetMask(new string[]{ "TeamRed", "TeamBlue", "Rocket", "Flag" });
+			//int layerMask = LayerMask.GetMask(new string[]{ "TeamRed", "TeamBlue", "Rocket", "Flag" });
+			//layerMask = ~layerMask;
+			int layerMask = 1 << 0;
 			/*if (team.team_ID == 0)
 				layerMask = ~(1 << 9);
 			else
 				layerMask = ~(1 << 8);*/
 
 			RaycastHit hit;
-			if (!Physics.SphereCast(ray, 0.7f, out hit, Vector3.Distance(transform.position, aimedPos), layerMask, QueryTriggerInteraction.Ignore)) {
+			if (!Physics.SphereCast(ray, 0.7f, out hit, Vector3.Distance(transform.position, aimedPos), layerMask, QueryTriggerInteraction.Ignore) || (shootDir == aimedPos - transform.position && Vector3.Distance (transform.position, newTargetPos) <= 15)/*Vector3.Angle(transform.forward, targetDir) % 180 < 15 || Vector3.Distance (transform.position, newTargetPos) < 8*/) {
 
 
-				if (Vector3.Angle(transform.forward, shootDir) <= 70)
+				if (Vector3.Angle (transform.forward, shootDir) <= 70) {
+
 					bot.ShootInDirection (shootDir);
+					GizmosService.Line (transform.position, aimedPos, 3);
 
-
+				}
 			}
 
 
