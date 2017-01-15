@@ -491,13 +491,20 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 			Vector3 targetDir = (newTargetPos - targetPos).normalized;
 
 
+
 			Vector3 aimedPos = newTargetPos;
 
-			if (newTargetPos != targetPos && (newTargetPos - targetPos).magnitude > 0.003f && Vector3.Distance(transform.position, newTargetPos) > 8)
-				//aimedPos = newTargetPos + targetDir * Time.deltaTime * 26 * Vector3.Distance(transform.position, newTargetPos + targetDir * Time.deltaTime * 5);
-				aimedPos = newTargetPos + targetDir * Time.deltaTime * 29f * Vector3.Distance(transform.position, newTargetPos + targetDir * Time.deltaTime * 30f);
-			
 			Vector3 shootDir = aimedPos - transform.position;
+
+			if (newTargetPos != targetPos && (newTargetPos - targetPos).magnitude > 0.003f && Vector3.Distance (transform.position, newTargetPos) > 8)
+				//aimedPos = newTargetPos + targetDir * Time.deltaTime * 26 * Vector3.Distance(transform.position, newTargetPos + targetDir * Time.deltaTime * 5);
+				//aimedPos = newTargetPos + targetDir * Time.deltaTime * 30f * Vector3.Distance(transform.position, newTargetPos /*+ targetDir * Time.deltaTime * 1.2f*/) * 0.95f;
+
+				shootDir += Vector3.Distance (aimedPos, transform.position) * targetDir * Vector3.Distance (newTargetPos, targetPos) / Time.deltaTime /* * 0.048*/ / 22;
+				//shootDir = aimedPos - transform.position;
+
+
+
 
 
 
@@ -510,7 +517,7 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 				layerMask = ~(1 << 8);*/
 
 			RaycastHit hit;
-			if (!Physics.SphereCast(ray, 0.7f, out hit, Vector3.Distance(transform.position, aimedPos), layerMask)) {
+			if (!Physics.SphereCast(ray, 0.7f, out hit, Vector3.Distance(transform.position, aimedPos), layerMask, QueryTriggerInteraction.Ignore)) {
 
 
 				if (Vector3.Angle(transform.forward, shootDir) <= 70)
