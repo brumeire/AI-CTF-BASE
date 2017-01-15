@@ -58,9 +58,9 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
 
   void Update()
   {
-        GizmosService.Text(state.ToString(), transform.position + Vector3.forward, 0.01f, Color.white);
+        //GizmosService.Text(state.ToString(), transform.position + Vector3.forward, 0.01f, Color.white);
         score = master.GetScore(bot.team_ID); // récupère le score
-        GizmosService.Cone(transform.position, transform.forward, Vector3.up, 10, 70); // --> affiche le cône de vision
+        //GizmosService.Cone(transform.position, transform.forward, Vector3.up, 10, 70); // --> affiche le cône de vision
         //LetGo(); // --> 
         CheckFlag(); // --> si je porte le drapeau, passe en mode ReturnHomeWithFlag
         UpdateState(); // --> exécute les instructions de chaque état

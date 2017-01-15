@@ -34,7 +34,16 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 	Coroutine shooter;
 
 
+	Vector3 posWait0;
+	Vector3 posWait1;
+
 	void Start(){
+
+		posWait1 = new Vector3 (-16, 2.083333f, -4);
+
+		posWait0 = new Vector3 (16, 2.083333f, 4);
+
+
 
 		master = FindObjectOfType<GameMaster>();
 		team = transform.parent.parent.GetComponent<Team>();
@@ -95,7 +104,6 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 			if (team.team_ID == 1)
 				target = new Vector3 (-32, 2.083333f, 7);
-
 			else
 				target = new Vector3 (32, 2.083333f, -7);
 			//agent.SetDestination (team.team_base.position);
@@ -122,6 +130,54 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 		}
 
 
+		// CAMPING
+
+		else if (behaviour.state == BotBehaviourDeusVult.BotState.DefensePlantATent) {
+		
+
+			Vector3 target = Vector3.zero;
+
+			if (team.team_ID == 1)
+				target = new Vector3 (18, 2.083333f, -21);
+			else
+				target = new Vector3 (-18, 2.083333f, 21);
+			//agent.SetDestination (team.team_base.position);
+
+			if (transform.position == target)
+				destinationReached = true;
+
+			if (Vector3.Distance (transform.position, target) > 12)
+				destinationReached = false;
+
+
+
+
+			Vector3 lookAtTarget = Vector3.zero;
+
+			if (team.team_ID == 1)
+				lookAtTarget = new Vector3 (12, 2.083333f, -13);
+			else
+				lookAtTarget = new Vector3 (-12, 2.083333f, 13);
+
+
+
+			if (!destinationReached)
+				agent.SetDestination (target);
+			else if (Vector3.Angle (transform.forward, lookAtTarget - transform.position) > 10) {
+				agent.Stop ();
+
+				float angle = Vector3.Angle (transform.forward, lookAtTarget - transform.position);
+
+				bot_object.transform.Rotate (Vector3.up, Mathf.Clamp (360 * Time.deltaTime, 0, angle));
+			}
+		
+		
+		
+		
+		
+		}
+
+
 
 		//ATTACK FLAG
 
@@ -129,7 +185,53 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 		else if (behaviour.state == BotBehaviourDeusVult.BotState.AttackGetFlag) {
 
 
-			agent.SetDestination (teamController.theirFlagLastKnownPosition);
+			int agentsAttackingAlive = 0;
+
+			foreach (BotBehaviourDeusVult ally in teamController.teamMates) {
+			
+				if (ally.state == BotBehaviourDeusVult.BotState.AttackGetFlag && !ally.bot.is_dead)
+					agentsAttackingAlive++;
+			
+			}
+
+			if (agentsAttackingAlive < 3 && Vector3.Distance (transform.position, team.team_base.position) < Vector3.Distance (transform.position, team.enemy_base.position)) {
+
+				if (!teamController.theyStoleOurFlag) {
+
+					Vector3 posWait = Vector3.zero;
+
+					if (team.team_ID == 1)
+						posWait = posWait1;
+					else
+						posWait = posWait0;
+
+
+					agent.SetDestination (posWait);
+
+					if (Vector3.Distance (posWait, teamController.ourFlagLastKnownPosition) < 10)
+						agent.SetDestination (teamController.ourFlagLastKnownPosition);
+
+
+					else if (Vector3.Distance (transform.position, posWait) < 4) {
+
+
+						agent.Stop ();
+						bot_object.transform.Rotate (Vector3.up, 170 * Time.deltaTime);
+
+					}
+				
+
+				} else {
+				
+					agent.SetDestination (teamController.ourFlagLastKnownPosition);
+				
+				
+				}
+
+			}
+
+			else
+				agent.SetDestination (teamController.theirFlagLastKnownPosition);
 
 
 		}
@@ -145,7 +247,7 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 			if (!teamController.theyStoleOurFlag) {
 
-				if (Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) > 15 && Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) < 30) {
+				if (Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) > 15 && Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) < 30 && Vector3.Distance (team.team_base.position, teamController.flagCarrier.transform.position) > Vector3.Distance(transform.position, team.team_base.position)) {
 
 
 					agent.Stop ();
@@ -206,9 +308,9 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 				if (Vector3.Distance (transform.position, team.team_base.position) > 20){
 
-					if (count > 0)
+					if (count > 0 && Vector3.Distance(helpersGlobalPos, team.team_base.position) < Vector3.Distance(transform.position, team.team_base.position))
 						//agent.SetDestination (helpersGlobalPos - 7 * (helpersGlobalPos - transform.position).normalized);
-						agent.SetDestination (helpersGlobalPos);
+						agent.SetDestination ((helpersGlobalPos + team.team_base.position) / 2);
 					else
 						agent.SetDestination (team.team_base.position);
 
@@ -299,6 +401,53 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 
 
+
+
+
+		// VA CHERCHER DRAPEAU SI PROCHE
+
+		/*if (teamController.theyStoleOurFlag && master.GetFlagCarrierID((team.team_ID + 1) % 2) == -1 && Vector3.Distance (teamController.ourFlagLastKnownPosition, transform.position) <= 5) {
+		
+			int otherClose = 0;
+
+			foreach (BotBehaviourDeusVult ally in teamController.teamMates) {
+			
+				if (ally != behaviour && Vector3.Distance (teamController.ourFlagLastKnownPosition, ally.transform.position) <= 15)
+					otherClose++;
+
+			}
+
+			if (otherClose < 1)
+				agent.SetDestination (teamController.ourFlagLastKnownPosition);
+		
+		
+		
+		} 
+
+
+		else if (master.GetFlagCarrierID(team.team_ID) == -1 && Vector3.Distance (teamController.theirFlagLastKnownPosition, transform.position) <= 5) {
+
+			int otherClose = 0;
+
+			foreach (BotBehaviourDeusVult ally in teamController.teamMates) {
+
+				if (ally != behaviour && Vector3.Distance (teamController.theirFlagLastKnownPosition, ally.transform.position) <= 15)
+					otherClose++;
+
+			}
+
+
+
+			if (otherClose < 1)
+				agent.SetDestination (teamController.theirFlagLastKnownPosition);
+
+
+
+
+
+		} */
+
+
 	}
 
 
@@ -306,6 +455,32 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 	IEnumerator Shoot(GameObject target){
 
 		Vector3 targetPos = target.transform.position;
+
+		if (Vector3.Distance (targetPos, transform.position) < 13) {
+		
+			Vector3 shootDir = targetPos - transform.position;
+			GizmosService.Line (transform.position, targetPos, 2);
+		
+
+			Ray ray = new Ray (transform.position, shootDir);
+
+			int layerMask = ~LayerMask.GetMask(new string[]{ "TeamRed", "TeamBlue", "Rocket", "Flag" });
+			/*if (team.team_ID == 0)
+				layerMask = ~(1 << 9);
+			else
+				layerMask = ~(1 << 8);*/
+
+			if (!Physics.SphereCast(ray, 0.7f, Vector3.Distance(transform.position, targetPos), layerMask)) {
+
+
+				if (Vector3.Angle(transform.forward, shootDir) <= 70)
+					bot.ShootInDirection (shootDir);
+
+
+			}
+		
+
+		}
 
 		yield return null;
 
@@ -318,25 +493,41 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 			Vector3 aimedPos = newTargetPos;
 
-			if (newTargetPos != targetPos)
-				aimedPos = newTargetPos + targetDir * Time.deltaTime * 26 * Vector3.Distance(transform.position, newTargetPos + targetDir * Time.deltaTime * 5);
-
+			if (newTargetPos != targetPos && (newTargetPos - targetPos).magnitude > 0.003f && Vector3.Distance(transform.position, newTargetPos) > 8)
+				//aimedPos = newTargetPos + targetDir * Time.deltaTime * 26 * Vector3.Distance(transform.position, newTargetPos + targetDir * Time.deltaTime * 5);
+				aimedPos = newTargetPos + targetDir * Time.deltaTime * 29f * Vector3.Distance(transform.position, newTargetPos + targetDir * Time.deltaTime * 30f);
+			
 			Vector3 shootDir = aimedPos - transform.position;
 
 
 
 			Ray ray = new Ray (transform.position, shootDir);
 
-			int layerMask = 0;
-			if (team.team_ID == 0)
+			int layerMask = ~LayerMask.GetMask(new string[]{ "TeamRed", "TeamBlue", "Rocket", "Flag" });
+			/*if (team.team_ID == 0)
 				layerMask = ~(1 << 9);
 			else
-				layerMask = ~(1 << 8);
+				layerMask = ~(1 << 8);*/
 
-			if (!Physics.SphereCast(ray, 0.7f, Vector3.Distance(transform.position, aimedPos), layerMask) && Vector3.Angle(transform.forward, shootDir) <= 70) {
+			RaycastHit hit;
+			if (!Physics.SphereCast(ray, 0.7f, out hit, Vector3.Distance(transform.position, aimedPos), layerMask)) {
 
 
-				bot.ShootInDirection (shootDir);
+				if (Vector3.Angle(transform.forward, shootDir) <= 70)
+					bot.ShootInDirection (shootDir);
+
+
+			}
+
+
+
+			else if (hit.collider.gameObject == target) {
+			
+				Debug.Log ("WTF MAN ???");
+				if (Vector3.Angle(transform.forward, shootDir) <= 70)
+					bot.ShootInDirection (shootDir);
+			
+
 			}
 
 		}

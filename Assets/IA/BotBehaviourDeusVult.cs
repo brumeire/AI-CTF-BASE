@@ -14,7 +14,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		AttackShootFlagFollowers, 
 		DefenseProtectBase, 
 		DefensePlantATent, 
-		DefenseShootFragBearer, 
+		DefenseShootFlagBearer, 
 		DefenseBlockEnnemiesSolo, 
 		DefenseBlockEnnemiesTeam
 	};
@@ -80,7 +80,55 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		if (teamController.teamStrategy == TeamBehaviourDeusVult.TeamStrategy.AttackFlag) {
 		
 
-			if (state != BotState.DefenseProtectBase) {
+
+			if ((state != BotState.DefenseProtectBase || state != BotState.DefensePlantATent) && master.GetFlagCarrierID ((teamId + 1) % 2) == bot.ID) {
+
+				if (state == BotState.DefenseProtectBase) {
+
+					teamController.flagDefenser = teamController.GetCloser (team.team_base.position);
+
+					teamController.flagDefenser.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefenseProtectBase);
+
+
+
+				}
+
+
+				else if (state == BotState.DefensePlantATent) {
+
+
+					Vector3 posCamping = Vector3.zero;
+
+					if (teamId == 1)
+						posCamping = teamController.posCamping1;
+					else
+						posCamping = teamController.posCamping0;
+
+
+					teamController.sideCamper = teamController.GetCloser (posCamping);
+
+					teamController.sideCamper.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefensePlantATent);
+
+
+
+				}
+
+
+
+				SwitchState (BotState.AttackBringFlagBack);
+
+
+
+
+			}
+
+
+
+
+
+
+
+			if (state != BotState.DefenseProtectBase && state != BotState.DefensePlantATent) {
 			
 
 
@@ -126,7 +174,49 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		else if (teamController.teamStrategy == TeamBehaviourDeusVult.TeamStrategy.Defense) {
 
 
-			if (state != BotState.DefenseProtectBase) {
+			if ((state != BotState.DefenseProtectBase || state != BotState.DefensePlantATent) && master.GetFlagCarrierID ((teamId + 1) % 2) == bot.ID) {
+			
+				if (state == BotState.DefenseProtectBase) {
+				
+					teamController.flagDefenser = teamController.GetCloser (team.team_base.position);
+
+					teamController.flagDefenser.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefenseProtectBase);
+				
+				
+				
+				}
+
+
+				else if (state == BotState.DefensePlantATent) {
+
+
+					Vector3 posCamping = Vector3.zero;
+
+					if (teamId == 1)
+						posCamping = teamController.posCamping1;
+					else
+						posCamping = teamController.posCamping0;
+
+
+					teamController.sideCamper = teamController.GetCloser (posCamping);
+
+					teamController.sideCamper.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefensePlantATent);
+
+
+
+				}
+
+
+
+				SwitchState (BotState.AttackBringFlagBack);
+			
+			
+			
+			
+			}
+
+
+			if (state != BotState.DefenseProtectBase && state != BotState.DefensePlantATent) {
 
 
 
@@ -173,7 +263,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 
 
 
-		GizmosService.Cone(bot_object.transform.position, bot_object.transform.forward, Vector3.up, 10, 70);
+		//GizmosService.Cone(bot_object.transform.position, bot_object.transform.forward, Vector3.up, 10, 70);
 
 	}
 
@@ -291,6 +381,10 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 			teamController.numberOfProtecting++;
 			break;
 
+		case BotState.DefensePlantATent:
+			teamController.numberOfProtecting++;
+			break;
+
 		case BotState.AttackGetFlag:
 			teamController.numberOfAttacking++;
 			break;
@@ -346,6 +440,10 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 			teamController.numberOfProtecting--;
 			break;
 
+		case BotState.DefensePlantATent:
+			teamController.numberOfProtecting--;
+			break;
+
 		case BotState.AttackGetFlag:
 			teamController.numberOfAttacking--;
 			break;
@@ -369,16 +467,13 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 		// si on ne cherche pas spécifiquement un drapeau, on ignore celui-ci dans le raycast
 		int layer_mask = Physics.DefaultRaycastLayers;
 
-		if(Physics.Raycast(r, out hit, Mathf.Infinity, layer_mask))
+		if(Physics.Raycast(r, out hit, Vector3.Distance(pos, transform.position), layer_mask) || Vector3.Angle(transform.forward, dir_to_obj) > 70)
 		{
-			if(hit.collider.tag == "Flag" && hit.collider.name == "flag_" + teamId.ToString())
-			{
-				if(Vector3.Angle(transform.forward, dir_to_obj) <= 70)
-				{
-					return true;
-				}
-			}
+			
+			return true; // on a la vision et le drapeau est là ou on ne peut pas voir le drapeau
+
 		}
+
 		return false;
 	}
 

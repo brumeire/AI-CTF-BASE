@@ -65,8 +65,20 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 	public BotBehaviourDeusVult flagCarrier;
 
 
+	public Vector3 posCamping0;
+
+	public Vector3 posCamping1;
+
 	void Start ()
 	{
+
+		posCamping1 = new Vector3 (18, 0, -21);
+
+		posCamping0 = new Vector3 (-18, 0, 21);
+
+
+
+		teamStrategy = TeamStrategy.Defense;
 
 		master = FindObjectOfType<GameMaster>();
 		team = transform.parent.GetComponent<Team> ();
@@ -135,7 +147,14 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 			if (!sideCamper) {
 			
-				Vector3 posCamping = new Vector3 ();
+				Vector3 posCamping = Vector3.zero;
+
+				if (teamID == 1)
+					posCamping = posCamping1;
+				else
+					posCamping = posCamping0;
+
+
 				sideCamper = GetCloser (posCamping);
 
 				sideCamper.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefensePlantATent);
@@ -158,6 +177,8 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 
 			weStoleTheirFlag = true;
+
+			theirFlagLastKnownPosition = master.GetBotFromID (flagCarrier).transform.position;
 
 		} 
 
@@ -264,7 +285,7 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 		foreach (BotBehaviourDeusVult bot in teamMates) {
 
-			if (bot.state != BotBehaviourDeusVult.BotState.DefenseProtectBase) {
+			if (bot.state != BotBehaviourDeusVult.BotState.DefenseProtectBase && bot.state != BotBehaviourDeusVult.BotState.DefensePlantATent) {
 
 				float newDist = Vector3.Distance (bot.transform.position, pos);
 
