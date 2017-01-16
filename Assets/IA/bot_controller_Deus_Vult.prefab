@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 114668929692883384}
   - component: {fileID: 114480049584135430}
   - component: {fileID: 114747292774623774}
+  - component: {fileID: 114163943747141516}
   m_Layer: 0
   m_Name: bot_controller_Deus_Vult
   m_TagString: Untagged
@@ -42,6 +43,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114163943747141516
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000012044280718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5efc634eda8620b4ead50c5f83af68f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agent: {fileID: 0}
 --- !u!114 &114480049584135430
 MonoBehaviour:
   m_ObjectHideFlags: 1

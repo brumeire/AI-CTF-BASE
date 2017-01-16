@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class DeusVultStrategyDefense : MonoBehaviour {
+public class DeusVultStrategyAdvanced : MonoBehaviour {
 
 
 	// Game master (script qui gère la capture des drapeaux, le respawn des bots et le score)
@@ -122,7 +122,7 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 				float angle = Vector3.Angle (transform.forward, team.team_base.position - transform.position);
 
-				bot_object.transform.Rotate (Vector3.up, Mathf.Clamp (360 * Time.deltaTime, 0, angle));
+				bot_object.transform.Rotate (Vector3.up, -Mathf.Clamp (360 * Time.deltaTime, 0, angle));
 			}
 
 
@@ -133,7 +133,7 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 		// CAMPING
 
 		else if (behaviour.state == BotBehaviourDeusVult.BotState.DefensePlantATent) {
-		
+
 
 			Vector3 target = Vector3.zero;
 
@@ -170,11 +170,11 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 				bot_object.transform.Rotate (Vector3.up, Mathf.Clamp (360 * Time.deltaTime, 0, angle));
 			}
-		
-		
-		
-		
-		
+
+
+
+
+
 		}
 
 
@@ -188,10 +188,10 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 			int agentsAttackingAlive = 0;
 
 			foreach (BotBehaviourDeusVult ally in teamController.teamMates) {
-			
+
 				if (ally.state == BotBehaviourDeusVult.BotState.AttackGetFlag && !ally.bot.is_dead)
 					agentsAttackingAlive++;
-			
+
 			}
 
 			if (agentsAttackingAlive < 3 && Vector3.Distance (transform.position, team.team_base.position) < Vector3.Distance (transform.position, team.enemy_base.position)) {
@@ -222,13 +222,13 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 						bot_object.transform.Rotate (Vector3.up, 170 * Time.deltaTime);
 
 					}
-				
+
 
 				} else {
-				
+
 					agent.SetDestination (teamController.ourFlagLastKnownPosition);
-				
-				
+
+
 				}
 
 			}
@@ -473,15 +473,15 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 			else
 				layerMask = ~(1 << 8);*//*
 
-			if (!Physics.SphereCast(ray, 0.7f, Vector3.Distance(transform.position, targetPos), layerMask)) {*//*
+		if (!Physics.SphereCast(ray, 0.7f, Vector3.Distance(transform.position, targetPos), layerMask)) {*//*
 
 
-				if (Vector3.Angle(transform.forward, shootDir) <= 70)
-					bot.ShootInDirection (shootDir);
+			if (Vector3.Angle(transform.forward, shootDir) <= 70)
+				bot.ShootInDirection (shootDir);
 
 
 			//}
-		
+
 
 		}*/
 		float timeBetweenShots = 0;
@@ -506,14 +506,14 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 				//aimedPos = newTargetPos + targetDir * Time.deltaTime * 30f * Vector3.Distance(transform.position, newTargetPos /*+ targetDir * Time.deltaTime * 1.2f*/) * 0.95f;
 
 				shootDir += Vector3.Distance (aimedPos, transform.position) * targetDir * Vector3.Distance (newTargetPos, targetPos) / timeBetweenShots /*Time.deltaTime /* * 0.048*/ / 22;
-				//shootDir = aimedPos - transform.position;
+					//shootDir = aimedPos - transform.position;
 
 
 
 
 
 
-			Ray ray = new Ray (transform.position, shootDir);
+					Ray ray = new Ray (transform.position, shootDir);
 
 			//int layerMask = LayerMask.GetMask(new string[]{ "TeamRed", "TeamBlue", "Rocket", "Flag" });
 			//layerMask = ~layerMask;
@@ -524,7 +524,7 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 				layerMask = ~(1 << 8);*/
 
 			RaycastHit hit;
-			if (!Physics.SphereCast(ray, 0.7f, out hit, Vector3.Distance(transform.position, aimedPos), layerMask, QueryTriggerInteraction.Ignore) || (shootDir == aimedPos - transform.position && Vector3.Distance (transform.position, newTargetPos) <= 15)/*Vector3.Angle(transform.forward, targetDir) % 180 < 15 || Vector3.Distance (transform.position, newTargetPos) < 8*/) {
+			if (!Physics.SphereCast (ray, 0.75f, out hit, Vector3.Distance (transform.position, aimedPos), layerMask, QueryTriggerInteraction.Ignore) || (shootDir == aimedPos - transform.position && Vector3.Distance (transform.position, newTargetPos) <= 15)/*Vector3.Angle(transform.forward, targetDir) % 180 < 15 || Vector3.Distance (transform.position, newTargetPos) < 8*/) {
 
 
 				if (Vector3.Angle (transform.forward, shootDir) <= 70) {
@@ -533,21 +533,39 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 					GizmosService.Line (transform.position, aimedPos, 3);
 
 				}
-			}
+			} else if (hit.collider.gameObject == target) {
 
-
-
-			else if (hit.collider.gameObject == target) {
-			
 				Debug.Log ("WTF MAN ???");
-				if (Vector3.Angle(transform.forward, shootDir) <= 70)
+				if (Vector3.Angle (transform.forward, shootDir) <= 70)
 					bot.ShootInDirection (shootDir);
-			
 
+
+			} 
+
+			//GizmosService.Line (transform.position, aimedPos, 0.5f);
+
+
+			foreach (BotBehaviourDeusVult ally in teamController.teamMates) {
+			
+				if (ally != behaviour && !ally.bot.is_dead && ally.bot.can_shoot) {
+				
+					//ally.ShootNow (target, newTargetPos, targetDir, Vector3.Distance (newTargetPos, targetPos) / timeBetweenShots);
+				
+				
+				
+				}
+			
+			
+			
+			
+			
 			}
 
-			else
-				GizmosService.Line (transform.position, aimedPos, 0.5f);
+
+
+
+
+			
 
 		}
 
@@ -555,5 +573,10 @@ public class DeusVultStrategyDefense : MonoBehaviour {
 
 
 	}
+
+
+
+
+
 
 }

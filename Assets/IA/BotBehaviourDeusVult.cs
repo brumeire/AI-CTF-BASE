@@ -24,7 +24,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 	public BotState state = BotState.IDLE;
 
 
-
+	float maxSpeedNoticed = 0;
 	// Game master (script qui gère la capture des drapeaux, le respawn des bots et le score)
 	GameMaster master;
 	Team team;
@@ -71,6 +71,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 
 	void Update()
 	{
+		GizmosService.Cone(transform.position,bot_object.transform.forward, Vector3.up, 10, 70); // --> affiche le cône de vision
 		//UpdateState();
 
 		//Update Perception
@@ -255,6 +256,97 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 
 
 		}
+
+
+		else if (teamController.teamStrategy == TeamBehaviourDeusVult.TeamStrategy.Advanced) {
+
+
+			if ((state != BotState.DefenseProtectBase || state != BotState.DefensePlantATent) && master.GetFlagCarrierID ((teamId + 1) % 2) == bot.ID) {
+
+				if (state == BotState.DefenseProtectBase) {
+
+					teamController.flagDefenser = teamController.GetCloser (team.team_base.position);
+
+					teamController.flagDefenser.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefenseProtectBase);
+
+
+
+				}
+
+
+				else if (state == BotState.DefensePlantATent) {
+
+
+					Vector3 posCamping = Vector3.zero;
+
+					if (teamId == 1)
+						posCamping = teamController.posCamping1;
+					else
+						posCamping = teamController.posCamping0;
+
+
+					teamController.sideCamper = teamController.GetCloser (posCamping);
+
+					teamController.sideCamper.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefensePlantATent);
+
+
+
+				}
+
+
+
+				SwitchState (BotState.AttackBringFlagBack);
+
+
+
+
+			}
+
+
+			if (state != BotState.DefenseProtectBase && state != BotState.DefensePlantATent) {
+
+
+
+				if (!teamController.weStoleTheirFlag)
+					SwitchState (BotState.AttackGetFlag);
+
+
+
+
+				else if (teamController.weStoleTheirFlag) {
+
+
+					if (master.GetFlagCarrierID ((teamId + 1) % 2) == bot.ID) {
+
+						teamController.flagCarrier = this;
+
+						SwitchState (BotState.AttackBringFlagBack);
+
+					}
+
+					else
+						SwitchState (BotState.AttackHelpFlagGetter);
+
+					//Debug.Log (master.GetFlagCarrierID ((teamId + 1) % 2) + ", " + bot.ID +", " + teamId);
+
+				}
+
+
+			}
+
+
+
+
+			GetComponent<DeusVultStrategyAdvanced> ().Act ();
+
+
+		}
+
+
+
+
+
+
 
 
 
@@ -477,6 +569,57 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 
 		return false;
 	}
+
+
+
+
+	public void ShootNow(GameObject target, Vector3 targetPos, Vector3 targetDir, float targetSpeed){
+
+
+		if (targetSpeed > maxSpeedNoticed)
+			maxSpeedNoticed = targetSpeed;
+
+
+
+		Vector3 aimedPos = targetPos;
+
+		Vector3 shootDir = aimedPos - transform.position;
+
+		if (targetPos != targetPos && (targetPos - targetPos).magnitude > 0.004f && Vector3.Angle(transform.forward, targetDir) % 180 > 5)
+			shootDir += Vector3.Distance (aimedPos, transform.position) * targetDir * targetSpeed / 22;
+				
+
+
+
+
+
+
+		Ray ray = new Ray (transform.position, shootDir);
+
+
+		int layerMask = 1 << 0;
+
+		RaycastHit hit;
+		if (!Physics.SphereCast (ray, 0.75f, out hit, Vector3.Distance (transform.position, aimedPos), layerMask, QueryTriggerInteraction.Ignore) || (shootDir == aimedPos - transform.position && Vector3.Distance (transform.position, targetPos) <= 15)) {
+
+
+			if (Vector3.Angle (transform.forward, shootDir) <= 70 && targetSpeed >= maxSpeedNoticed) {
+
+				bot.ShootInDirection (shootDir);
+				GizmosService.Line (transform.position, aimedPos, 3);
+				Debug.Log ("Shot called by ally");
+
+			}
+		}
+
+
+
+
+
+
+	}
+
+
 
 
 }

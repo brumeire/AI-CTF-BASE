@@ -27,6 +27,11 @@ public class bot_controller_Skaje_the_King : MonoBehaviour {
 	Collider collider;
 	Renderer renderer;
 
+	//Position des rockets
+
+	Vector3 rocketPosition;
+	Vector3 dirRocket;
+
 	// COPAINS
 
 	GameObject bot0;
@@ -159,13 +164,26 @@ public class bot_controller_Skaje_the_King : MonoBehaviour {
 				SwitchState (BotState.RAID);
 			}
 		}
-		print (master.flag_carriers [team.team_ID]);
 		/*
 		// si j'ai le flag ennemi et que mon flag n'est pas à ma base.
 		if (master.is_flag_home[team.team_ID] == false && master.flag_carriers [team.enemy_team_ID] != -1)  {
 
 			SwitchState (BotState.GOTOENNEMYBASE);
 		}*/
+
+		//Si une balle viens sur moi je l'esquive 
+		if (GameObject.FindWithTag ("Rocket") != null) {
+			if (bot.CanSeeObject (GameObject.FindGameObjectWithTag ("Rocket"))) 
+			{
+				GameObject rocket = GameObject.FindGameObjectWithTag ("Rocket");
+
+				if (rocketPosition != Vector3.zero) {
+					dirRocket = rocket.transform.position - rocketPosition;
+				}
+				rocketPosition = rocket.transform.position;
+				agent.Move (dirRocket + new Vector3 (Random.Range (0,170),Random.Range (0,170),Random.Range (0,170)));
+			}
+		}
 	}
 
 
@@ -219,7 +237,7 @@ public class bot_controller_Skaje_the_King : MonoBehaviour {
 			break;
 		case BotState.GOBACK:
 			//** Go back to base
-			print ("BOBACK");
+		
 				agent.SetDestination (team.team_base.position);
 
 			break;

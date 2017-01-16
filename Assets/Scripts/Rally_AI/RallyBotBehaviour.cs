@@ -7,10 +7,9 @@ public class RallyBotBehaviour : MonoBehaviour
 	// liste des states possibles pour ce comportement de bot
 	public enum RallyBotState
 	{
-		GETFLAG, BACKTOBASE, BODYGUARD, REVENGE
+		GETFLAG, BACKTOBASE, BODYGUARD, REVENGE, DEFENSE
 	}
 
-	;
 	// état actuel du bot
 	public RallyBotState state = RallyBotState.GETFLAG;
 
@@ -30,6 +29,8 @@ public class RallyBotBehaviour : MonoBehaviour
 	Collider collider;
 	Renderer renderer;
 
+    Vector3 randVec;
+
 	void Start ()
 	{
 		master = FindObjectOfType<GameMaster> ();
@@ -43,6 +44,8 @@ public class RallyBotBehaviour : MonoBehaviour
 		renderer = bot_object.GetComponent<Renderer> ();
 
 		SwitchState (RallyBotState.GETFLAG);
+        rallyteam.availableTroops.Add(this);
+        rallyteam.allTroops.Add(this);
 	}
 
 	void Update ()
@@ -61,6 +64,14 @@ public class RallyBotBehaviour : MonoBehaviour
         }
     }
 
+    private void SetAvailable()
+    {
+        if (state != RallyBotState.BACKTOBASE)
+        {
+            rallyteam.availableTroops.Add(this);
+        }
+    }
+
     #region State Machine Functions
     void SwitchState (RallyBotState new_state)
 	{
@@ -73,9 +84,14 @@ public class RallyBotBehaviour : MonoBehaviour
 	{
 		switch (state)
         {
-		case RallyBotState.BODYGUARD:
-			rallyteam.bodyguards.Add(this);
-			break;
+		    case RallyBotState.BACKTOBASE:
+			    rallyteam.availableTroops.Remove(this);
+			    break;
+
+            case RallyBotState.DEFENSE:
+                randVec = new Vector3((float)Random.value, 0f, (float)Random.value)*50.0f;
+                Debug.Log(randVec);
+                break;
 		}
 	}
 
@@ -83,29 +99,42 @@ public class RallyBotBehaviour : MonoBehaviour
 	{
 		switch (state) 
 		{
-		case RallyBotState.BODYGUARD:
-			agent.SetDestination(rallyteam.quatterback.transform.position);
-			break;
+		    case RallyBotState.BODYGUARD:
+                if (Vector3.Distance(rallyteam.quatterback.transform.position, transform.position) > 
+                    Vector3.Distance(team.team_base.position, transform.position))
+                {
+                    agent.SetDestination(team.team_base.position);
+                }
+                else
+                {
+                    agent.SetDestination(rallyteam.quatterback.transform.position);
+                }
+			    break;
 
-		case RallyBotState.BACKTOBASE:
-			agent.SetDestination(team.team_base.position);
-			break;
+		    case RallyBotState.BACKTOBASE:
+			    agent.SetDestination(team.team_base.position);
+			    break;
 
-		case RallyBotState.GETFLAG:
-			agent.SetDestination(rallyteam.enemyFlagPos);
-            if (transform.position == rallyteam.enemyFlagPos)
-            {
-                rallyteam.ForceOutdateEnemyFlagPos();
-            }
-			break;
+		    case RallyBotState.GETFLAG:
+			    agent.SetDestination(rallyteam.enemyFlagPos);
+                if (transform.position == rallyteam.enemyFlagPos)
+                {
+                    rallyteam.ForceOutdateEnemyFlagPos();
+                }
+			    break;
 
-        case RallyBotState.REVENGE:
-            agent.SetDestination(rallyteam.allyFlagPos);
-            if (bot.CanSeeObject(team.team_base.gameObject))
-            {
-                rallyteam.ForceOutdateAllyFlagPos();
-            }
-            break;
+            case RallyBotState.REVENGE:
+                agent.SetDestination(rallyteam.allyFlagPos);
+                if (bot.CanSeeObject(team.team_base.gameObject))
+                {
+                    rallyteam.ForceOutdateAllyFlagPos();
+                }
+                break;
+
+            case RallyBotState.DEFENSE:
+                agent.SetDestination(team.team_base.position + new Vector3( 1, 0, 1) * (Mathf.Cos(Time.time)));
+                break;
+
         }
 	}
 
@@ -113,9 +142,9 @@ public class RallyBotBehaviour : MonoBehaviour
 	{
 		switch (state)
         {
-		case RallyBotState.BODYGUARD:
-			rallyteam.bodyguards.Remove(this);
-			break;
+		    case RallyBotState.BACKTOBASE:
+			    rallyteam.availableTroops.Add(this);
+			    break;
 		}
 	}
 
@@ -138,21 +167,24 @@ public class RallyBotBehaviour : MonoBehaviour
 			    break;
 
 		case RallyBotState.BODYGUARD :
-                if (rallyteam.quatterback == this.transform.parent.gameObject)
-                {
-                    SwitchState(RallyBotState.BACKTOBASE);
-                }
-                else if (rallyteam.quatterback == null)
+                if (rallyteam.quatterback == null)
 			    {
 				    SwitchState(RallyBotState.GETFLAG);
 			    }
 			    break;
 
 		case RallyBotState.BACKTOBASE :
-			    if (rallyteam.quatterback == null)
+			    if (rallyteam.quatterback != this.transform.parent.gameObject)
 			    {
-				    SwitchState(RallyBotState.GETFLAG);
-			    }
+                    if (rallyteam.quatterback == null)
+                    {
+                        SwitchState(RallyBotState.GETFLAG);
+                    }
+                    else
+                    {
+                        SwitchState(RallyBotState.BODYGUARD);
+                    }
+                }
 			    break;
 
          case RallyBotState.REVENGE :
@@ -173,7 +205,8 @@ public class RallyBotBehaviour : MonoBehaviour
 
     private void Feedbacks()
     {
-        GizmosService.Text(state.ToString(), transform.position + Vector3.forward, 0.01f, Color.white);
+        GizmosService.Text(state.ToString() + bot.can_shoot.ToString(), transform.position + Vector3.forward, 0.01f, Color.white);
+        GizmosService.Cone(transform.position, transform.forward, Vector3.up, 10, 70);
     }
 
     #endregion
@@ -199,7 +232,7 @@ public class RallyBotBehaviour : MonoBehaviour
                         break;
                     }
                 }
-                if (target != null)
+                if (target == null)
                 {
                     target = GetClosest(targets);
                     if (target != null)

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
+//état du jeu à un instant t
 public enum GameState
 {
     NEUTRAL, ADVANTAGE, DISADVANTAGE, TENSE
@@ -31,8 +32,10 @@ public class RallyTeam : MonoBehaviour
     public Vector3 mainTargetPos;
 
     [HideInInspector]
-    public List<RallyBotBehaviour> bodyguards = new List<RallyBotBehaviour>();
+    public List<RallyBotBehaviour> availableTroops = new List<RallyBotBehaviour>();
 
+    [HideInInspector]
+    public List<RallyBotBehaviour> allTroops = new List<RallyBotBehaviour>();
 
 	void Start ()
 	{
@@ -42,6 +45,7 @@ public class RallyTeam : MonoBehaviour
 		team = transform.parent.GetComponent<Team> ();
         allyFlagPos = team.enemy_base.position;
         enemyFlagPos = team.enemy_base.position;
+        SetDefense(1);
 	}
 
 	void Update ()
@@ -50,6 +54,7 @@ public class RallyTeam : MonoBehaviour
         SetMainTarget();
         SetGameState();
         UpdateGameState();
+
         master.DEBUG_TEXT.text = " ";
     }
 
@@ -84,43 +89,104 @@ public class RallyTeam : MonoBehaviour
 		}
 	}
 
-    private void SetRevenge(float percentage)
+    #region Manage Team States
+
+    private void SetRevenge(int numberOfBots)
     {
-        int numberOfGuards = bodyguards.Count;
-        for (int i = 0; i < numberOfGuards * percentage; ++i)
+        List<RallyBotBehaviour> taglist = new List<RallyBotBehaviour>();
+        if (numberOfBots > availableTroops.Count)
         {
-            bodyguards[i].state = RallyBotBehaviour.RallyBotState.REVENGE;
+            if (availableTroops.Count == 0)
+                return;
+            else
+                numberOfBots = availableTroops.Count;
+        }
+
+        for (int i = 0; i < numberOfBots; ++i)
+        {
+            availableTroops[i].state = RallyBotBehaviour.RallyBotState.REVENGE;
+            taglist.Add(availableTroops[i]);
+        }
+
+        foreach(RallyBotBehaviour rally in taglist)
+        {
+            availableTroops.Remove(rally);
+        }
+            
+    }
+
+    private void SetDefense(int numberOfBots)
+    {
+        List<RallyBotBehaviour> taglist = new List<RallyBotBehaviour>();
+        if (numberOfBots > availableTroops.Count)
+        {
+            if (availableTroops.Count == 0)
+                return;
+            else
+                numberOfBots = availableTroops.Count;
+        }
+
+        for (int i = 0; i < numberOfBots; ++i)
+        {
+            availableTroops[i].state = RallyBotBehaviour.RallyBotState.DEFENSE;
+            taglist.Add(availableTroops[i]);
+        }
+
+        foreach (RallyBotBehaviour rally in taglist)
+        {
+            availableTroops.Remove(rally);
+        }
+
+    }
+
+    private void SetAvailable()
+    {
+        foreach(RallyBotBehaviour rally in allTroops)
+        {
+            if (rally.state != RallyBotBehaviour.RallyBotState.BACKTOBASE)
+            {
+                availableTroops.Add(rally);
+            }
         }
     }
 
+    #endregion
+
     #region State Machine Functions
+
     private void SetGameState()
     {
+        GameState newState = GameState.NEUTRAL;
         if (quatterback == null)
         {
             if (master.IsTeamFlagHome(team.team_ID))
             {
-                SwitchState(GameState.NEUTRAL);
+                newState = GameState.NEUTRAL;
             }
             else
             {
-                SwitchState(GameState.DISADVANTAGE);
+                newState = GameState.DISADVANTAGE;
             }
         }
         else
         {
             if (master.IsTeamFlagHome(team.team_ID))
             {
-                SwitchState(GameState.ADVANTAGE);
+                newState = GameState.ADVANTAGE;
             }
             else
             {
-                SwitchState(GameState.TENSE);
+                newState = GameState.TENSE;
             }
+        }
+
+        if (newState != state)
+        {
+            SwitchState(newState);
         }
     }
 
-    void SwitchState(GameState new_state)
+    private void SwitchState(GameState new_state)
     {
         OnExitState();
         state = new_state;
@@ -132,11 +198,15 @@ public class RallyTeam : MonoBehaviour
         switch (state)
         {
             case GameState.TENSE:
-                SetRevenge(0.5f);
+                SetAvailable();
+                SetRevenge(2);
+                SetDefense(2);
                 break;
 
             case GameState.DISADVANTAGE:
-                SetRevenge(0.75f);
+                SetAvailable();
+                SetRevenge(3);
+                SetDefense(1);
                 break;
         }
     }
@@ -147,6 +217,7 @@ public class RallyTeam : MonoBehaviour
 
     void OnExitState()
     {
+        
     }
     #endregion
 

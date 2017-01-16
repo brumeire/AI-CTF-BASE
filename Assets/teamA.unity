@@ -586,10 +586,10 @@ MonoBehaviour:
   - TeamBlue
   nb_bot_per_team: 5
   team_controller_prefab:
-  - {fileID: 1000014130282326, guid: d55b255609c0c2a4c95105f6c0e31b2d, type: 2}
+  - {fileID: 1000014130282326, guid: edca850c38b31ac46a3fa7b97a1fd638, type: 2}
   - {fileID: 1000014130282326, guid: 7ac1fed2e6539984580562cfb1e74e75, type: 2}
   bot_controller_prefab:
-  - {fileID: 1030934181616918, guid: d8a9752a2594cba42bbbcd86bb8438ff, type: 2}
+  - {fileID: 1000012044280718, guid: 16e53bc4f65b8944487320149680c5de, type: 2}
   - {fileID: 1000012044280718, guid: b79f6e5f017f1874db769e3b696968e3, type: 2}
   is_flag_home: 0000
   flag_carriers: 0000000000000000

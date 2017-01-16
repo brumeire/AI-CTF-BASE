@@ -12,7 +12,7 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 	public enum TeamStrategy{ 
 		Defense, 
 		AttackFlag, 
-		Alternative, 
+		Advanced, 
 		Mixed
 	};
 
@@ -79,7 +79,7 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 
 
-		teamStrategy = TeamStrategy.Defense;
+		teamStrategy = TeamStrategy.Advanced;
 
 		master = FindObjectOfType<GameMaster>();
 		team = transform.parent.GetComponent<Team> ();
@@ -147,6 +147,42 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 			if (!sideCamper) {
 			
+				Vector3 posCamping = Vector3.zero;
+
+				if (teamID == 1)
+					posCamping = posCamping1;
+				else
+					posCamping = posCamping0;
+
+
+				sideCamper = GetCloser (posCamping);
+
+				sideCamper.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefensePlantATent);
+
+
+			}
+
+
+
+		}
+
+
+		// Stratégie avancée
+
+		else if (teamStrategy == TeamStrategy.Advanced){
+
+			if (!flagDefenser) {
+
+				flagDefenser = GetCloser (team.team_base.position);
+
+				flagDefenser.GetComponent<BotBehaviourDeusVult> ().SwitchState (BotBehaviourDeusVult.BotState.DefenseProtectBase);
+
+
+			}
+
+
+			if (!sideCamper) {
+
 				Vector3 posCamping = Vector3.zero;
 
 				if (teamID == 1)
