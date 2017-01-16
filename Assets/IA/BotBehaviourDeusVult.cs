@@ -241,7 +241,7 @@ public class BotBehaviourDeusVult : MonoBehaviour {
 					else
 						SwitchState (BotState.AttackHelpFlagGetter);
 
-					Debug.Log (master.GetFlagCarrierID ((teamId + 1) % 2) + ", " + bot.ID +", " + teamId);
+					//Debug.Log (master.GetFlagCarrierID ((teamId + 1) % 2) + ", " + bot.ID +", " + teamId);
 
 				}
 

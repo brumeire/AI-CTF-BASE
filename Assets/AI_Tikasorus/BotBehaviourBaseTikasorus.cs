@@ -3,46 +3,46 @@ using System.Collections;
 
 public class BotBehaviourBaseTikasorus : MonoBehaviour {
     //ID du bot qui possède le drapeau
-    public int carrier_ID;
-    public GameObject Carrier_obj;
-    public GameObject EnemyIKill;
+    public int carrier_ID; // ID du porteur de drapeau ennemi
+    public GameObject Carrier_obj; // Bot porteur de drapeau ennemi
+    public GameObject EnemyIKill; // L'ennemi que je vise mouhaha
 
     public bool weMark = false; // A-t'on marqué ?
-    public int newScore = 1;
-    public int score;
+    public int nextScore = 1; // score actuel +1 
+    public int score; // score actuel
 
     // liste des states possibles pour ce comportement de bot
-    public enum BotState{ 
-    IDLE, // au respawn --> indique marche à suivre
-    SEARCHFLAG, // va chercher le drapeau ennemi
-    RETURNHOMEWITHFLAG, // retourne à la base avec le drapeau
-    ESCORTE, // escorter le porteur de drapeau
-    ATTACKENEMY, // quand t'es en position sniper --> attaque tous les ennemis à portée
-    SNIPER, // va se poster aux positions sniper 
-    RESCUEOURFLAG // va chercher le drapeau allié
-  };
-  // état actuel du bot
-  public BotState state = BotState.IDLE;
+    public enum BotState { 
+    IDLE, // Au respawn --> indique marche à suivre
+    SEARCHFLAG, // Un seul bot va chercher le drapeau ennemi
+    RETURNHOMEWITHFLAG, // Retourne à la base avec le drapeau ennemi
+    ESCORTE, // Escorter le porteur de drapeau
+    DEFEND, // quand t'es en position sniper --> aller-retours en défense 
+    SNIPER, // va se poster aux positions sniper --> aller-retours en défense 
+    RESCUEOURFLAG // va chercher le drapeau allié à la base ennemie
+    };
+  
+    public BotState state = BotState.IDLE; // état actuel du bot
 
 
 
-  // Game master (script qui gère la capture des drapeaux, le respawn des bots et le score)
-  GameMaster master;
-  Team team;
-  TeamBehaviourTikasorus espritEquipe;
+    // Game master (script qui gère la capture des drapeaux, le respawn des bots et le score)
+    GameMaster master;
+    Team team;
+    TeamBehaviourTikasorus espritEquipe;
 
-  // go qui possède les components du bot
-  GameObject bot_object;
-  // script de base contenant ID, team_ID du bot
-  Bot bot;
-  // components du game object de base du bot
-  UnityEngine.AI.NavMeshAgent agent;
-  Collider colliderC;
-  Renderer rendererR;
+    // go qui possède les components du bot
+    GameObject bot_object;
+    // script de base contenant ID, team_ID du bot
+    Bot bot;
+    // components du game object de base du bot
+    UnityEngine.AI.NavMeshAgent agent;
+    Collider colliderC;
+    Renderer rendererR;
 
 	
 	void Start () 
-  {
+    {
     master = FindObjectOfType<GameMaster>();
     team = transform.parent.parent.GetComponent<Team>();
     espritEquipe = transform.parent.parent.GetComponentInChildren<TeamBehaviourTikasorus>();
@@ -56,27 +56,28 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
     SwitchState(BotState.IDLE);
 	}
 
-  void Update()
-  {
-        //GizmosService.Text(state.ToString(), transform.position + Vector3.forward, 0.01f, Color.white);
-        score = master.GetScore(bot.team_ID); // récupère le score
-        //GizmosService.Cone(transform.position, transform.forward, Vector3.up, 10, 70); // --> affiche le cône de vision
+    void Update()
+    {
+        carrier_ID = master.GetFlagCarrierID(team.enemy_team_ID); // récupère l'ID du porteur de drapeau ennemi
+        Carrier_obj = master.GetBotFromID(carrier_ID); // récupère le bot porteur de drapeau ennemi
+        GizmosService.Text(state.ToString(), transform.position + Vector3.forward, 0.01f, Color.white); // --> affiche l'état du bot
+        GizmosService.Cone(transform.position, transform.forward, Vector3.up, 10, 70); // --> affiche le cône de vision
+        score = master.GetScore(bot.team_ID); // récupère le score actuel
         //LetGo(); // --> 
         CheckFlag(); // --> si je porte le drapeau, passe en mode ReturnHomeWithFlag
         UpdateState(); // --> exécute les instructions de chaque état
-        //SearchForFlag(); // --> chercher le drapeau allié si je ne le vois pas
         CheckEnnemy(); // --> permet de tier sur les ennemis
         if (bot.is_dead == true)
         {
             SwitchState(BotState.IDLE); // --> si je suis mort, passe dans l'état Idle
             team.SendMessageToTeam("ImDead"); // --> si je veux envoyer un message à ma mort
         }
-  }
+    }
 
     void GetFlag() // Que se passe-t'il quand un bot obtient le drapeau    
     {
-        //if (
-        Debug.Log("J'ai le drapeau");
+		if (Carrier_obj != null)
+        	espritEquipe.flag_Enemy_Pos = Carrier_obj.transform.position; // update de la position du drapeau ennemi sur le porteur de drapeau
     }
 
     public void LetGo()
@@ -86,17 +87,17 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
 
     public void CheckEnnemy()  // --> permet de tier sur les ennemis
     {
-        Collider[] test = Physics.OverlapSphere(transform.position, 50);
-        for (int i=0; i<test.Length; i++)
+        Collider[] ennemies = Physics.OverlapSphere(transform.position, 50);
+        for (int i=0; i<ennemies.Length; i++)
         {
-            if (test[i].gameObject.tag == "Bot") // Si les objets sont des Bots
+            if (ennemies[i].gameObject.tag == "Bot") // Si les objets sont des Bots
             {
-                Bot enemy_bot = test[i].gameObject.GetComponent<Bot>();
+                Bot enemy_bot = ennemies[i].gameObject.GetComponent<Bot>();
                 if (enemy_bot.team_ID != bot.team_ID) // Si les Bot sont de la team ennemie
                 {
-                    if (bot.CanSeeObject(test[i].gameObject))
+                    if (bot.CanSeeObject(ennemies[i].gameObject))
                     {
-                        EnemyIKill = test[i].gameObject; // Le Bot que je vise
+                        EnemyIKill = ennemies[i].gameObject; // Le Bot que je vise
                         bot.ShootInDirection(EnemyIKill.transform.position - transform.position); // Je le shoote
                     }
                 }
@@ -127,13 +128,11 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
     {
         if (master.IsTeamFlagHome(bot.team_ID) == false) // Si je ne vois pas le drapeau allié
         {
-            Debug.Log("je ne vois pas le drapeau");
             SwitchState(BotState.RESCUEOURFLAG); //Je passe dans l'état : je cherche le drapeau
         }
         else if (master.IsTeamFlagHome(bot.team_ID) == true) // Si je vois le drapeau allié
         {
-            Debug.Log("je vois le drapeau");
-            SwitchState(BotState.SNIPER); //Je passe dans l'état : je retourne à ma position sniper (aller-retours)
+            SwitchState(BotState.IDLE); //Je passe dans l'état : je retourne à ma position sniper (aller-retours)
         }
     }
 
@@ -154,9 +153,6 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
 
     public void CheckFlag() // Si par hasard un joueur tombe sur le drapeau, va le chercher et le ramène à la base
     {
-        carrier_ID = master.GetFlagCarrierID(team.enemy_team_ID);
-        Carrier_obj = master.GetBotFromID(carrier_ID);
-
         if (Carrier_obj != null) // Si personne ne porte le drapeau
         {
             if (carrier_ID == bot.ID) // Si mon ID correspond au porteur de drapeau
@@ -169,7 +165,7 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
 
     public void WeMark() //vérifie si on a marqué un point
     {
-                    if (newScore < score) // 
+                    if (nextScore < score) // 
                     {
                         weMark = true;
                     }
@@ -191,7 +187,7 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
       break;
 
       case BotState.SEARCHFLAG:
-                newScore = score;
+                nextScore = score;
                 break;
 
       case BotState.RETURNHOMEWITHFLAG:
@@ -200,7 +196,7 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
       case BotState.ESCORTE:
       break;
 
-      case BotState.ATTACKENEMY:
+      case BotState.DEFEND:
       break;
 
       case BotState.SNIPER:
@@ -250,17 +246,14 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
                 break;
 
             case BotState.RETURNHOMEWITHFLAG:
-                //return to the ally camp with ennemy flag
-                carrier_ID = master.GetFlagCarrierID(team.enemy_team_ID);
-                Carrier_obj = master.GetBotFromID(carrier_ID);
+                //return to the ally camp with enemy flag
                 if (carrier_ID == bot.ID)
                 {
-
-
                     agent.SetDestination(team.team_base.position);
                     WeMark();
                     if (weMark == true)
                     {
+                        espritEquipe.flag_Enemy_Pos = team.enemy_base.position; // ré instancier la position du drapeau ennemi à la base ennemie
                         SwitchState(BotState.IDLE);
                     }
                 }
@@ -268,8 +261,7 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
                 {
                     SwitchState(BotState.IDLE);
                 }
-
-                    break;
+                break;
 
       case BotState.ESCORTE: 
                 // follow the flag carrier
@@ -285,18 +277,17 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
                 {
                     agent.SetDestination(Should_carrierFlag.transform.position);
                 }
-                /*if (Carrier_obj.GetComponent<Bot>().is_dead == true) //si le porteur de drapeau est mort : que faire ??
+                if (Should_carrierFlag == null) //si le porteur de drapeau est mort : que faire ??
                 {
-                    Debug.Log("notre porteur est mort");
                     agent.SetDestination(team.enemy_base.position);
                     /*if (carrier_ID == bot.ID)
                     {
                         SwitchState(BotState.RETURNHOMEWITHFLAG);
-                    }
-                }*/
+                    }*/
+                }
       break;
 
-      case BotState.ATTACKENEMY:
+      case BotState.DEFEND:
                 //position base (oui le nom est inaproprié)
                 if(bot.team_ID == 0)
                 {
@@ -347,7 +338,7 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
                         agent.SetDestination(new Vector3(23, transform.position.y, 30));
                         if (transform.position == new Vector3 (23, transform.position.y, 30))
                         {
-                            SwitchState(BotState.ATTACKENEMY);
+                            SwitchState(BotState.DEFEND);
                         }
                     }
                     if (bot.ID == espritEquipe.secondSniper)
@@ -355,7 +346,7 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
                         agent.SetDestination(new Vector3(27, transform.position.y, -27));
                         if (transform.position == new Vector3(27, transform.position.y, -27))
                         {
-                            SwitchState(BotState.ATTACKENEMY);
+                            SwitchState(BotState.DEFEND);
                         }
                     }
                 }
@@ -366,7 +357,7 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
                         agent.SetDestination(new Vector3(-31, transform.position.y, 28));
                         if (transform.position == new Vector3(-31, transform.position.y, 28))
                         {
-                            SwitchState(BotState.ATTACKENEMY);
+                            SwitchState(BotState.DEFEND);
                         }
                     }
                     if (bot.ID == espritEquipe.secondSniper)
@@ -374,7 +365,7 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
                         agent.SetDestination(new Vector3(-22, transform.position.y, -30));
                         if (transform.position == new Vector3(-22, transform.position.y, -30))
                         {
-                            SwitchState(BotState.ATTACKENEMY);
+                            SwitchState(BotState.DEFEND);
                         }
                     }
                 }
@@ -402,7 +393,7 @@ public class BotBehaviourBaseTikasorus : MonoBehaviour {
       case BotState.SEARCHFLAG:
       break;
 
-      case BotState.ATTACKENEMY:
+      case BotState.DEFEND:
       break;
 
       case BotState.SNIPER:
