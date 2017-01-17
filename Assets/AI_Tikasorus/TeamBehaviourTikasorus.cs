@@ -12,15 +12,10 @@ public class TeamBehaviourTikasorus : MonoBehaviour {
     public int firstGuard;
     public int secondGuard;
 
-    public Vector3 flag_Enemy_Pos; // position du drapeau ennemi
-    public Vector3 flag_Ally_Pos; // position du drapeau allié
-
     void Start()
     {
         team = transform.parent.GetComponent<Team>();
         master = FindObjectOfType<GameMaster>();
-        flag_Enemy_Pos = team.enemy_flag.transform.position;
-        flag_Ally_Pos = team.team_flag.transform.position;
     }
 	
 	void Update () {
@@ -31,5 +26,13 @@ public class TeamBehaviourTikasorus : MonoBehaviour {
         firstGuard = team.bots[1].ID;
         secondGuard = team.bots[2].ID;
 
+
+        /*foreach (Bot myBot in team.bots) // On parcours le tableau des bots de l'équipe
+        {
+            /*if (master.GetFlagCarrierID(team.team_ID) != myBot.ID) // Pour tous ceux qui ne portent pas le drapeau
+            {
+               
+            }
+    }*/
     }
 }

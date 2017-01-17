@@ -226,12 +226,18 @@ public class DeusVultStrategyAdvanced : MonoBehaviour {
 
 				} else {
 
-					agent.SetDestination (teamController.ourFlagLastKnownPosition);
+
+						agent.SetDestination (teamController.ourFlagLastKnownPosition);
 
 
 				}
 
 			}
+
+
+			// Si le drapeau allié est perdu, par terre, visible par l'équipe (position sûre) et proche, va le chercher
+			else if (!master.IsTeamFlagHome(team.team_ID) && teamController.weSeeOurFlag && master.GetFlagCarrierID ((team.team_ID + 1) % 2) == -1 && Vector3.Distance (transform.position, teamController.ourFlagLastKnownPosition) < 15)
+				agent.SetDestination (teamController.ourFlagLastKnownPosition);
 
 			else
 				agent.SetDestination (teamController.theirFlagLastKnownPosition);
@@ -248,9 +254,9 @@ public class DeusVultStrategyAdvanced : MonoBehaviour {
 		else if (behaviour.state == BotBehaviourDeusVult.BotState.AttackHelpFlagGetter) {
 
 
-			if (!teamController.theyStoleOurFlag) {
+			if (master.IsTeamFlagHome(team.team_ID) ||  (!master.IsTeamFlagHome(team.team_ID) && master.GetFlagCarrierID((team.team_ID + 1) % 2) == -1 && Vector3.Distance(teamController.ourFlagLastKnownPosition, team.team_base.position) < 15)/*!teamController.theyStoleOurFlag*/) {
 
-				if (Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) > 15 && Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) < 30 && Vector3.Distance (team.team_base.position, teamController.flagCarrier.transform.position) > Vector3.Distance(transform.position, team.team_base.position)) {
+				if (Vector3.Distance(transform.position, teamController.flagCarrier.transform.position) < 15 && Vector3.Distance(transform.position, team.team_base.position) < Vector3.Distance(teamController.flagCarrier.transform.position, team.team_base.position) /*Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) > 15 && Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) < 30 && Vector3.Distance (team.team_base.position, teamController.flagCarrier.transform.position) > Vector3.Distance(transform.position, team.team_base.position)*/) {
 
 
 					agent.Stop ();
@@ -260,7 +266,7 @@ public class DeusVultStrategyAdvanced : MonoBehaviour {
 				} else if(Vector3.Distance (transform.position, teamController.flagCarrier.transform.position) >= 30) {
 
 
-					agent.SetDestination (teamController.flagCarrier.transform.position);
+					agent.SetDestination (teamController.flagCarrier.transform.position + (team.team_base.position - teamController.flagCarrier.transform.position).normalized * 5);
 
 				}
 				else 

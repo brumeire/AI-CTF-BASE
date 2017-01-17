@@ -17,7 +17,7 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 	};
 
 
-	public TeamStrategy teamStrategy = TeamStrategy.Defense;
+	public TeamStrategy teamStrategy = TeamStrategy.Advanced;
 
 
 	public List<BotBehaviourDeusVult> teamMates = new List<BotBehaviourDeusVult> ();
@@ -69,7 +69,7 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 	public Vector3 posCamping1;
 
-
+	float timerStrat = 0;
 	void Start ()
 	{
 
@@ -110,6 +110,8 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 
 	void Update ()
 	{
+
+		timerStrat += Time.deltaTime;
 
 		// STRATEGIE DE BASE
 
@@ -256,6 +258,7 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 		
 			BroughtBackTheirFlag ();
 			pointsTeam++;
+			timerStrat = 0;
 		
 		
 		}
@@ -275,7 +278,8 @@ public class TeamBehaviourDeusVult : MonoBehaviour
 		if (master.GetFlagCarrierID(teamID) == -1)
 			BroughtBackTheirFlag ();
 
-
+		if (timerStrat >= 120)
+			teamStrategy = TeamStrategy.Defense;
 
 	}
 
